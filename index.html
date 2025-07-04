@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Sorteador de Times com Cartas</title>
+  <style>
+    body { font-family: sans-serif; max-width: 800px; margin: auto; padding: 20px; font-size: 1.6em; }
+    textarea { width: 100%; height: 500px; margin-bottom: 10px; font-size: 1em; }
+    .player-list { margin: 10px 0; }
+    .player-list div { display: flex; align-items: center; margin-bottom: 8px; }
+    .player-list input[type="text"] { flex: 1; font-size: 1em; margin-left: 10px; }
+    .hidden { display: none; }
+    .team { margin-top: 15px; padding: 10px; border: 1px solid #ccc; border-radius: 8px; }
+    .red { color: red; font-weight: bold; }
+    .footer { margin-top: 30px; text-align: center; font-size: 0.9em; color: #666; }
+    button.copy-btn { margin-top: 20px; padding: 10px 20px; font-size: 1em; cursor: pointer; }
+    .joke-flag { font-size: 0.8em; color: #666; }
+  </style>
+</head>
+<body>
+  <h1>🏆 Sorteador de Times com Cartas</h1>
+  <label for="playersInput">Cole aqui a lista de nomes (com ou sem sujeira):</label>
+  <textarea id="playersInput"></textarea>
+  <button onclick="processList()">Confirmar Lista</button>
+  <div id="presenceSection" class="hidden">
+    <h2>✅ Marque quem está presente</h2>
+    <form id="presenceForm" class="player-list"></form>
+    <br>
+    <label for="goalies">Quantos goleiros disponíveis?</label>
+    <select id="goalies">
+      <option value="2">2</option>
+      <option value="3">3</option>
+    </select>
+    <br><br>
+    <label><input type="checkbox" disabled id="includeAbsents"><s> Incluir ausentes no sorteio</s></label>
+    <br><br>
+    <label class="joke-flag"><input type="checkbox" checked disabled> Sempre colocar o Elião no melhor time</label>
+    <br>
+    <button onclick="drawTeams(event)">Sortear Times</button>
+  </div>
+  <div id="results" class="hidden">
+    <h2>🎴 Resultado do Sorteio</h2>
+    <div id="teamsOutput"></div>
+    <button class="copy-btn" onclick="copyToClipboard()">📋 Copiar resultado</button>
+  </div>
+  <div class="footer">
+    <p>🤖 Código desenvolvido com ajuda do ChatGPT · OpenAI</p>
+  </div>
+  <script>
+    const suits = ['♣', '♥', '♠', '♦'];
+
+    function processList() {
+      const input = document.getElementById('playersInput').value;
+      const players = extractConfirmedPlayers(input);
+      const form = document.getElementById('presenceForm');
+      form.innerHTML = '';
+      players.forEach((name, i) => {
+        const div = document.createElement('div');
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.id = 'present_' + i;
+        checkbox.checked = true;
+        const nameInput = document.createElement('input');
+        nameInput.type = 'text';
+        nameInput.value = name;
+        nameInput.id = 'name_' + i;
+        div.appendChild(checkbox);
+        div.appendChild(nameInput);
+        form.appendChild(div);
+      });
+      document.getElementById('presenceSection').classList.remove('hidden');
+    }
+
+    function extractConfirmedPlayers(text) {
+      const lines = text.split(/[\n\r]+/);
+      const players = [];
+      let inConfirmed = false;
+      for (let line of lines) {
+        const clean = line.trim();
+        const lower = clean.toLowerCase();
+        if (lower.includes('confirmados')) inConfirmed = true;
+        else if (['falta confirmar', 'fora', 'dm'].some(keyword => lower.includes(keyword))) break;
+        else if (inConfirmed) {
+          if (/🥅|goleiro/i.test(clean)) continue;
+          const match = clean.match(/\d+[\.)]?\s*(.*)/);
+          if (match) players.push(match[1].trim());
+          else if (clean) players.push(clean);
+        }
+      }
+      return [...new Set(players.filter(Boolean))];
+    }
+
+    function classifyPlayer(name) {
+      return Math.min((name.match(/\*/g) || []).length, 3);
+    }
+
+    function displayStars(name) {
+      const count = Math.min((name.match(/\*/g) || []).length, 3);
+      return name.replace(/\*+/g, '').trim() + ' ' + '⭐'.repeat(count);
+    }
+
+    function shuffle(array) {
+      let a = [...array];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function drawTeams(e) {
+      e.preventDefault();
+      const form = document.getElementById('presenceForm');
+      const includeAbsents = document.getElementById('includeAbsents').checked;
+      const players = [], absents = [];
+      form.querySelectorAll('div').forEach((div, i) => {
+        const name = div.querySelector('input[type="text"]').value.trim();
+        const present = div.querySelector('input[type="checkbox"]').checked;
+        if (name) present ? players.push(name) : absents.push(name);
+      });
+      const totalPlayers = includeAbsents ? [...players, ...absents] : players;
+      const byLevel = { 0: [], 1: [], 2: [], 3: [] };
+      totalPlayers.forEach(p => byLevel[classifyPlayer(p)].push(p));
+      const total = totalPlayers.length;
+      const teams = Array.from({ length: Math.ceil(total / 5) }, () => []);
+      [3,2,1,0].forEach(level => {
+        shuffle(byLevel[level]).forEach((p, idx) => {
+          for (let i = 0; i < teams.length; i++) {
+            const team = teams[(idx + i) % teams.length];
+            if (team.length < 5 && !team.some(tp => classifyPlayer(tp) === level)) {
+              team.push(p);
+              return;
+            }
+          }
+          for (let team of teams) {
+            if (team.length < 5) {
+              team.push(p);
+              return;
+            }
+          }
+        });
+      });
+      const goalieCount = parseInt(document.getElementById('goalies').value);
+      const output = document.getElementById('teamsOutput');
+      output.innerHTML = '';
+      teams.forEach((team, i) => {
+        const suit = suits[i] || '';
+        const colorClass = i === 1 || i === 3 ? 'red' : '';
+        output.innerHTML += `<div class="team ${colorClass}"><strong>Time ${i + 1} (${suit})</strong><br>${team.map(displayStars).map(p => '- ' + p).join('<br>')}</div>`;
+      });
+      output.innerHTML += `<div class="team"><h3>📋 Regras Especiais</h3><ul>
+        <li>Time 1 (♣) escolhe o primeiro goleiro</li>
+        ${goalieCount === 3 ? '<li class="red">Time 2 (♥) escolhe o segundo goleiro</li>' : '<li class="red">Time 2 (♥) fica com o outro goleiro</li>'}
+        <li class="red">Time 2 (♥) começa com a bola</li>
+        <li>Time 3 (♠) é o primeiro próximo</li>
+        <li class="red">Time 4 (♦) é o segundo próximo (entra no 3º jogo, exceto em caso de empate)</li>
+      </ul></div>`;
+      document.getElementById('results').classList.remove('hidden');
+    }
+
+    function copyToClipboard() {
+      const output = document.getElementById('teamsOutput');
+      const temp = document.createElement('textarea');
+      const text = output.innerHTML
+        .replace(/<div class="team.*?">/g, '')
+        .replace(/<\/div>/g, '\n')
+        .replace(/<br>/g, '\n')
+        .replace(/<li>/g, '- ')
+        .replace(/<\/li>/g, '\n')
+        .replace(/<[^>]+>/g, '')
+        .replace(/&nbsp;/g, ' ')
+        .replace(/&amp;/g, '&');
+      temp.value = text.trim();
+      document.body.appendChild(temp);
+      temp.select();
+      document.execCommand('copy');
+      document.body.removeChild(temp);
+    }
+  </script>
+</body>
+</html>
