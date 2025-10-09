@@ -1,181 +1,230 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <title>Sorteador de Times com Cartas</title>
-  <style>
-    body { font-family: sans-serif; max-width: 800px; margin: auto; padding: 20px; font-size: 1.6em; }
-    textarea { width: 100%; height: 500px; margin-bottom: 10px; font-size: 1em; }
-    .player-list { margin: 10px 0; }
-    .player-list div { display: flex; align-items: center; margin-bottom: 8px; }
-    .player-list input[type="text"] { flex: 1; font-size: 1em; margin-left: 10px; }
-    .hidden { display: none; }
-    .team { margin-top: 15px; padding: 10px; border: 1px solid #ccc; border-radius: 8px; }
-    .red { color: red; font-weight: bold; }
-    .footer { margin-top: 30px; text-align: center; font-size: 0.9em; color: #666; }
-    button.copy-btn { margin-top: 20px; padding: 10px 20px; font-size: 1em; cursor: pointer; }
-    .joke-flag { font-size: 0.8em; color: #666; }
-  </style>
+    <meta charset="UTF-8">
+    <title>Sorteador de Times Resenha Futs</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 10px; background-color: #f0f2f5; color: #1c1e21; }
+        .container { max-width: 800px; margin: 0 auto; background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        h1, h2 { color: #007bff; }
+        h1 { font-size: 1.8em; text-align: center; }
+        h2 { border-bottom: 2px solid #007bff; padding-bottom: 8px; margin-top: 30px; font-size: 1.4em; }
+        textarea { width: 100%; height: 140px; margin-bottom: 10px; padding: 10px; box-sizing: border-box; border: 1px solid #ddd; border-radius: 6px; font-size: 1em; }
+        button { display: block; width: 100%; padding: 15px; cursor: pointer; background-color: #007bff; color: white; border: none; border-radius: 6px; font-size: 1.2em; font-weight: bold; margin-bottom: 15px; transition: background-color 0.3s; }
+        button:hover { background-color: #0056b3; }
+        #sortearBtn { background-color: #28a745; }
+        #sortearBtn:hover { background-color: #218838; }
+        .jogador-item { padding: 10px; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+        .jogador-info { display: flex; align-items: center; }
+        .jogador-item .level-label { font-weight: bold; margin-left: 10px; }
+        .pontualidade-group { margin-left: 15px; }
+        .time { margin-top: 20px; border: 1px solid #007bff; padding: 15px; border-radius: 8px; background-color: #f8f9fa; }
+        .time h4 { margin-top: 0; color: #007bff; font-size: 1.2em; }
+        .time ul { list-style-type: none; padding-left: 0; }
+        .time li { margin-bottom: 5px; font-size: 1.1em; font-weight: 500; }
+        .nivel-4 { color: #dc3545; }
+        .nivel-3 { color: #fd7e14; }
+        .nivel-2 { color: #007bff; }
+        .nivel-1 { color: #6c757d; }
+        .contadores { padding: 15px; background-color: #e9ecef; border-radius: 6px; margin-bottom: 20px; display: flex; justify-content: space-around; flex-wrap: wrap; text-align: center; }
+        .contador-item { margin: 5px 10px; }
+        .contador-item strong { font-size: 1.5em; color: #007bff; }
+    </style>
 </head>
 <body>
-  <h1>🏆 Sorteador de Times com Cartas</h1>
-  <label for="playersInput">Cole aqui a lista de nomes (com ou sem sujeira):</label>
-  <textarea id="playersInput"></textarea>
-  <button onclick="processList()">Confirmar Lista</button>
-  <div id="presenceSection" class="hidden">
-    <h2>✅ Marque quem está presente</h2>
-    <form id="presenceForm" class="player-list"></form>
-    <br>
-    <label for="goalies">Quantos goleiros disponíveis?</label>
-    <select id="goalies">
-      <option value="2">2</option>
-      <option value="3">3</option>
-    </select>
-    <br><br>
-    <label><input type="checkbox" disabled id="includeAbsents"><s> Incluir ausentes no sorteio</s></label>
-    <br><br>
-    <label class="joke-flag"><input type="checkbox" checked disabled> Sempre colocar o Elião no melhor time</label>
-    <br>
-    <button onclick="drawTeams(event)">Sortear Times</button>
-  </div>
-  <div id="results" class="hidden">
-    <h2>🎴 Resultado do Sorteio</h2>
-    <div id="teamsOutput"></div>
-    <button class="copy-btn" onclick="copyToClipboard()">📋 Copiar resultado</button>
-  </div>
-  <div class="footer">
-    <p>🤖 Código desenvolvido com ajuda do ChatGPT · OpenAI</p>
-  </div>
-  <script>
-    const suits = ['♣', '♥', '♠', '♦'];
+    <div class="container">
+        <h1>Sorteador de Times Resenha Futs</h1>
+        <h2>Passo 1: Lista de Jogadores</h2>
+        <textarea id="textoWhatsapp" placeholder="Cole aqui a mensagem de confirmação do WhatsApp..."></textarea>
+        <button onclick="processarLista()">Processar Lista</button>
+        <h2>Passo 2: Confirmação e Bônus</h2>
+        <div id="jogadoresProcessados"><p>A lista de jogadores aparecerá aqui.</p></div>
+        <div id="contadores" class="contadores" style="display: none;"></div>
+        <button id="sortearBtn" onclick="iniciarSorteio()" style="display: none;">INICIAR SORTEIO</button>
+        <h2>Passo 3: Resultado do Sorteio</h2>
+        <div id="resultadoSorteio"></div>
+    </div>
+    
+    <script>
+        const NIVEIS_DE_HABILIDADE = { 'Anderson': 4, 'Junior': 4, 'Kleber': 4, 'Elivelton': 3, 'Felipe': 3, 'Jajá': 3, 'Rodolfo': 3, 'Willians': 3, 'Claudinei': 2, 'Dudinha': 2, 'Jonathan': 2, 'Lucas': 2, 'Matheus C': 2, 'Matheus Rosq': 2, 'Vitor': 2, 'Elio': 1, 'Cabelinho': 1, 'Gilson': 1, 'Kauê': 1, 'Rafael': 1, };
 
-    function processList() {
-      const input = document.getElementById('playersInput').value;
-      const players = extractConfirmedPlayers(input);
-      const form = document.getElementById('presenceForm');
-      form.innerHTML = '';
-      players.forEach((name, i) => {
-        const div = document.createElement('div');
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.id = 'present_' + i;
-        checkbox.checked = true;
-        const nameInput = document.createElement('input');
-        nameInput.type = 'text';
-        nameInput.value = name;
-        nameInput.id = 'name_' + i;
-        div.appendChild(checkbox);
-        div.appendChild(nameInput);
-        form.appendChild(div);
-      });
-      document.getElementById('presenceSection').classList.remove('hidden');
-    }
-
-    function extractConfirmedPlayers(text) {
-      const lines = text.split(/[\n\r]+/);
-      const players = [];
-      let inConfirmed = false;
-      for (let line of lines) {
-        const clean = line.trim();
-        const lower = clean.toLowerCase();
-        if (lower.includes('confirmados')) inConfirmed = true;
-        else if (['falta confirmar', 'fora', 'dm'].some(keyword => lower.includes(keyword))) break;
-        else if (inConfirmed) {
-          if (/🥅|goleiro/i.test(clean)) continue;
-          const match = clean.match(/\d+[\.)]?\s*(.*)/);
-          if (match) players.push(match[1].trim());
-          else if (clean) players.push(clean);
+        function extrairConfirmados(texto) {
+            const confirmados = new Set();
+            const regexLinha = /^\s*\d+\.\s*(.+)/gm;
+            let match;
+            while ((match = regexLinha.exec(texto)) !== null) {
+                const linhaInteira = match[1];
+                // SÓ ADICIONA À LISTA SE TIVER O CHECK DE CONFIRMADO
+                if (linhaInteira.includes('✅')) {
+                    // Limpa todos os emojis e excessos da linha
+                    const nomeLimpo = linhaInteira.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '').trim();
+                    if (nomeLimpo) confirmados.add(nomeLimpo);
+                }
+            }
+            return Array.from(confirmados);
         }
-      }
-      return [...new Set(players.filter(Boolean))];
-    }
 
-    function classifyPlayer(name) {
-      return Math.min((name.match(/\*/g) || []).length, 3);
-    }
 
-    function displayStars(name) {
-      const count = Math.min((name.match(/\*/g) || []).length, 3);
-      return name.replace(/\*+/g, '').trim() + ' ' + '⭐'.repeat(count);
-    }
+        function processarLista() {
+            const nomes = extrairConfirmados(document.getElementById('textoWhatsapp').value);
+            if (nomes.length === 0) { alert("Nenhum jogador confirmado com ✅ encontrado na lista."); return; }
+            const jogadores = nomes.map(nome => ({ nome: nome, nivel: NIVEIS_DE_HABILIDADE[nome] || 2 }));
+            renderizarListaConfirmacao(jogadores);
+            atualizarContadores();
+        }
 
-    function shuffle(array) {
-      let a = [...array];
-      for (let i = a.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [a[i], a[j]] = [a[j], a[i]];
-      }
-      return a;
-    }
+        function renderizarListaConfirmacao(jogadores) {
+            const div = document.getElementById('jogadoresProcessados');
+            div.innerHTML = '<h3>Jogadores Confirmados</h3>';
+            jogadores.sort((a,b) => a.nome.localeCompare(b.nome));
+            jogadores.forEach(j => {
+                div.innerHTML += `
+                    <div class="jogador-item" data-nome="${j.nome}" data-nivel="${j.nivel}">
+                        <div class="jogador-info">
+                            <input type="checkbox" name="presente-${j.nome}" checked onchange="atualizarContadores()">
+                            <label for="presente-${j.nome}">${j.nome}</label>
+                            <span class="level-label nivel-${j.nivel}">Nível ${j.nivel}</span>
+                        </div>
+                        <div class="pontualidade-group">
+                            <input type="checkbox" name="pontual-${j.nome}" onchange="atualizarContadores()">
+                            <label for="pontual-${j.nome}">Bônus (★)</label>
+                        </div>
+                    </div>`;
+            });
+            document.getElementById('sortearBtn').style.display = 'block';
+            document.getElementById('contadores').style.display = 'flex';
+        }
 
-    function drawTeams(e) {
-      e.preventDefault();
-      const form = document.getElementById('presenceForm');
-      const includeAbsents = document.getElementById('includeAbsents').checked;
-      const players = [], absents = [];
-      form.querySelectorAll('div').forEach((div, i) => {
-        const name = div.querySelector('input[type="text"]').value.trim();
-        const present = div.querySelector('input[type="checkbox"]').checked;
-        if (name) present ? players.push(name) : absents.push(name);
-      });
-      const totalPlayers = includeAbsents ? [...players, ...absents] : players;
-      const byLevel = { 0: [], 1: [], 2: [], 3: [] };
-      totalPlayers.forEach(p => byLevel[classifyPlayer(p)].push(p));
-      const total = totalPlayers.length;
-      const teams = Array.from({ length: Math.ceil(total / 5) }, () => []);
-      [3,2,1,0].forEach(level => {
-        shuffle(byLevel[level]).forEach((p, idx) => {
-          for (let i = 0; i < teams.length; i++) {
-            const team = teams[(idx + i) % teams.length];
-            if (team.length < 5 && !team.some(tp => classifyPlayer(tp) === level)) {
-              team.push(p);
-              return;
+        function atualizarContadores() {
+            const presentes = document.querySelectorAll('input[name^="presente"]:checked').length;
+            const comBonus = document.querySelectorAll('input[name^="pontual"]:checked').length;
+            let timesTexto = '0';
+            if (presentes >= 5) {
+                const timesCompletos = Math.floor(presentes / 5);
+                const resto = presentes % 5;
+                timesTexto = `${timesCompletos}`;
+                if (resto > 0) { timesTexto += ` (+${resto} próx.)`; }
             }
-          }
-          for (let team of teams) {
-            if (team.length < 5) {
-              team.push(p);
-              return;
-            }
-          }
-        });
-      });
-      const goalieCount = parseInt(document.getElementById('goalies').value);
-      const output = document.getElementById('teamsOutput');
-      output.innerHTML = '';
-      teams.forEach((team, i) => {
-        const suit = suits[i] || '';
-        const colorClass = i === 1 || i === 3 ? 'red' : '';
-        output.innerHTML += `<div class="team ${colorClass}"><strong>Time ${i + 1} (${suit})</strong><br>${team.map(displayStars).map(p => '- ' + p).join('<br>')}</div>`;
-      });
-      output.innerHTML += `<div class="team"><h3>📋 Regras Especiais</h3><ul>
-        <li>Time 1 (♣) escolhe o primeiro goleiro</li>
-        ${goalieCount === 3 ? '<li class="red">Time 2 (♥) escolhe o segundo goleiro</li>' : '<li class="red">Time 2 (♥) fica com o outro goleiro</li>'}
-        <li class="red">Time 2 (♥) começa com a bola</li>
-        <li>Time 3 (♠) é o primeiro próximo</li>
-        <li class="red">Time 4 (♦) é o segundo próximo (entra no 3º jogo, exceto em caso de empate)</li>
-      </ul></div>`;
-      document.getElementById('results').classList.remove('hidden');
-    }
+            document.getElementById('contadores').innerHTML = `<div class="contador-item"><span>Confirmados</span><br><strong>${document.querySelectorAll('.jogador-item').length}</strong></div><div class="contador-item"><span>Presentes</span><br><strong>${presentes}</strong></div><div class="contador-item"><span>Times</span><br><strong>${timesTexto}</strong></div><div class="contador-item"><span>Bônus ★</span><br><strong>${comBonus}</strong></div>`;
+        }
 
-    function copyToClipboard() {
-      const output = document.getElementById('teamsOutput');
-      const temp = document.createElement('textarea');
-      const text = output.innerHTML
-        .replace(/<div class="team.*?">/g, '')
-        .replace(/<\/div>/g, '\n')
-        .replace(/<br>/g, '\n')
-        .replace(/<li>/g, '- ')
-        .replace(/<\/li>/g, '\n')
-        .replace(/<[^>]+>/g, '')
-        .replace(/&nbsp;/g, ' ')
-        .replace(/&amp;/g, '&');
-      temp.value = text.trim();
-      document.body.appendChild(temp);
-      temp.select();
-      document.execCommand('copy');
-      document.body.removeChild(temp);
-    }
-  </script>
+        function coletarDadosFinais() {
+             const lista = [];
+             document.querySelectorAll('.jogador-item').forEach(item => {
+                if (item.querySelector('input[name^="presente"]:checked')) {
+                    lista.push({ nome: item.dataset.nome, nivel: parseInt(item.dataset.nivel), pontual: item.querySelector('input[name^="pontual"]:checked') ? true : false, });
+                }
+             });
+             return lista;
+        }
+        
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [array[i], array[j]] = [array[j], array[i]]; }
+            return array;
+        }
+        
+        function iniciarSorteio() {
+            const jogadoresPresentes = coletarDadosFinais();
+            const N = jogadoresPresentes.length;
+            if (N < 5) { alert(`Mínimo de 5 jogadores necessários.`); return; }
+            const pontuais = jogadoresPresentes.filter(j => j.pontual);
+            if (pontuais.length > 8) { alert(`ERRO: Máximo de 8 jogadores com bônus.`); return; }
+            const bonusPorNivel = pontuais.reduce((acc, j) => { (acc[j.nivel] = (acc[j.nivel] || 0) + 1); return acc; }, {});
+            for (const nivel in bonusPorNivel) { if (bonusPorNivel[nivel] > 2) { alert(`ERRO: O Nível ${nivel} tem mais de 2 com bônus.`); return; } }
+
+            const resto = N % 5;
+            let jogadoresParaSorteio = [...jogadoresPresentes];
+            let grupoDosProximos = [];
+            if (resto > 0) {
+                const candidatos = shuffleArray(jogadoresPresentes.filter(j => !j.pontual));
+                grupoDosProximos = candidatos.slice(0, resto);
+                const nomesDosProximos = new Set(grupoDosProximos.map(j => j.nome));
+                jogadoresParaSorteio = jogadoresPresentes.filter(j => !nomesDosProximos.has(j.nome));
+            }
+            
+            const numeroDeTimes = Math.floor(jogadoresParaSorteio.length / 5);
+            let times = Array.from({ length: numeroDeTimes }, (_, i) => ({ id: i + 1, jogadores: [] }));
+            const listaRepescagem = [];
+            
+            let pontuaisSorteio = jogadoresParaSorteio.filter(j => j.pontual);
+            let regularesSorteio = jogadoresParaSorteio.filter(j => !j.pontual);
+            const timeInicialRegular = (pontuaisSorteio.length > 0) ? 2 : 0;
+
+            for (let nivel = 4; nivel >= 1; nivel--) {
+                const pontuaisDoNivel = pontuaisSorteio.filter(j => j.nivel === nivel);
+                let regularesDoNivel = regularesSorteio.filter(j => j.nivel === nivel);
+                
+                if (pontuaisDoNivel.length === 1) {
+                    const parForcado = regularesDoNivel.shift();
+                    if (parForcado) {
+                        let par = shuffleArray([pontuaisDoNivel[0], parForcado]);
+                        times[0].jogadores.push(par[0]);
+                        times[1].jogadores.push(par[1]);
+                        regularesSorteio = regularesSorteio.filter(j => j.nome !== parForcado.nome);
+                    } else {
+                         const forcaT1 = times[0].jogadores.reduce((s, p) => s + p.nivel, 0);
+                         const forcaT2 = times[1].jogadores.reduce((s, p) => s + p.nivel, 0);
+                         if (forcaT1 <= forcaT2) { times[0].jogadores.push(pontuaisDoNivel[0]); } else { times[1].jogadores.push(pontuaisDoNivel[0]); }
+                    }
+                } else if (pontuaisDoNivel.length === 2) {
+                    let par = shuffleArray(pontuaisDoNivel);
+                    times[0].jogadores.push(par[0]);
+                    times[1].jogadores.push(par[1]);
+                }
+                
+                const timesRegularesDisponiveis = numeroDeTimes - timeInicialRegular;
+                if (timesRegularesDisponiveis > 0) {
+                    shuffleArray(regularesDoNivel);
+                    regularesDoNivel.forEach((jogador, index) => {
+                        if (index < timesRegularesDisponiveis) { times[timeInicialRegular + index].jogadores.push(jogador); } 
+                        else { listaRepescagem.push(jogador); }
+                    });
+                } else {
+                    listaRepescagem.push(...regularesDoNivel);
+                }
+            }
+            
+            shuffleArray(listaRepescagem);
+            while (listaRepescagem.length > 0) {
+                times.sort((a, b) => a.jogadores.length - b.jogadores.length);
+                const timeAlvo = times.find(t => t.jogadores.length < 5);
+                if (timeAlvo) { timeAlvo.jogadores.push(listaRepescagem.shift()); } 
+                else { grupoDosProximos.push(...listaRepescagem); break; }
+            }
+            
+            if (grupoDosProximos.length > 0) {
+                times.push({ id: numeroDeTimes + 1, jogadores: grupoDosProximos });
+            }
+
+            times.sort((a, b) => a.id - b.id);
+            renderizarResultado(times);
+        }
+
+        function renderizarResultado(times) {
+            let html = `<button onclick="copiarParaWhatsapp(${JSON.stringify(times).replace(/"/g, '&quot;')})">Copiar para WhatsApp</button>`;
+            times.forEach(time => {
+                const forca = time.jogadores.reduce((sum, j) => sum + j.nivel, 0);
+                time.jogadores.sort((a, b) => b.nivel - a.nivel);
+                const jogadoresListaHTML = time.jogadores.map(j => `<li class="nivel-${j.nivel}">${j.nome}${j.pontual ? ' ★' : ''}</li>`).join('');
+                const titulo = time.id > Math.floor(coletarDadosFinais().length / 5) || (coletarDadosFinais().length % 5 > 0 && time.id === times.length) ? `Time ${time.id} (Próximos / ${time.jogadores.length})` : `Time ${time.id} (Força Total: ${forca})`;
+                html += `<div class="time"><h4>${titulo}</h4><ul>${jogadoresListaHTML}</ul></div>`;
+            });
+            document.getElementById('resultadoSorteio').innerHTML = html;
+        }
+        
+        function copiarParaWhatsapp(times) {
+            let texto = '⚽ *SORTEIO DE TIMES RESENHA FUTS* ⚽\n\n';
+            times.forEach(time => {
+                const forca = time.jogadores.reduce((sum, j) => sum + j.nivel, 0);
+                const tituloTime = time.id > Math.floor(coletarDadosFinais().length / 5) || (coletarDadosFinais().length % 5 > 0 && time.id === times.length) ? `*Time ${time.id}* (Próximos)`: `*Time ${time.id}* (Força: ${forca})`;
+                texto += `--- ${tituloTime} ---\n`;
+                time.jogadores.sort((a, b) => b.nivel - a.nivel);
+                time.jogadores.forEach(j => { texto += `- ${j.nome}${j.pontual ? ' ★' : ''}\n`; });
+                texto += '\n';
+            });
+            navigator.clipboard.writeText(texto).then(() => alert('Resultado copiado!')).catch(err => alert('Erro ao copiar.'));
+        }
+    </script>
 </body>
 </html>
