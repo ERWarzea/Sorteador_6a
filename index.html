@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Sorteador de Times V4.06</title>
+    <title>Sorteador de Times</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 10px; background-color: #f0f2f5; color: #1c1e21; }
@@ -31,7 +31,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>Sorteador de Times V4.06 - Resenha Futs!!</h1>
+        <h1>Resenha Futs!! Sorteador V4.06.01</h1>
         <h2>Passo 1: Lista de Jogadores</h2>
         <textarea id="textoWhatsapp" placeholder="Cole aqui a mensagem de confirmação do WhatsApp..."></textarea>
         <button onclick="processarLista()">Processar Lista</button>
@@ -44,12 +44,15 @@
     </div>
     
     <script>
-        const NIVEIS_DE_HABILIDADE = { 'Anderson': 4, 'Junior': 4, 'Kleber': 4, 'Elivelton': 3, 'Felipe': 3, 'Jajá': 3, 'Rodolfo': 3, 'Willians': 3, 'Claudinei': 2, 'Dudinha': 2, 'Jonathan': 2, 'Lucas': 2, 'Matheus C': 2, 'Matheus Rosq': 2, 'Vitor': 2, 'Elio': 1, 'Cabelinh': 1, 'Gilson': 1, 'Kauê': 1, 'Rafael': 1, };
+        const NIVEIS_DE_HABILIDADE = { 'Anderson': 4, 'Junior': 4, 'Kleber': 4, 'Elivelton': 3, 'Felipe': 3, 'Jajá': 3, 'Rodolfo': 3, 'Willians': 3, 'Claudinei': 2, 'Dudinha': 2, 'Jonathan': 3, 'Lucas': 2, 'Matheus C': 4, 'Matheus Rosq': 2, 'Vitor': 1, 'Elio': 1, 'Cabelinh': 1, 'Gilson': 1, 'Kauê': 1, 'Rafael': 1, };
 
         // Funções de UI (processarLista, renderizarLista, etc.) permanecem as mesmas
         function extrairConfirmados(texto) {
             const confirmados = new Set();
-            const regexLinha = /^\s*\d+\.\s*(.+)/gm;
+            //
+            // const regexLinha = /^\s*\d+\.\s*(.+)/gm;  - 20.05.2026 => Só aceitava lista com pontos na separação
+            const regexLinha = /^\s*\d+[-.]\s*(.+)/gm;
+            //
             let match;
             while ((match = regexLinha.exec(texto)) !== null) {
                 if (match[1].includes('✅')) {
