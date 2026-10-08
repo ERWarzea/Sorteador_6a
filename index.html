@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Sorteador de Times</title>
+    <title>Sorteador de Times (V4.1.041)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 10px; background-color: #f0f2f5; color: #1c1e21; }
@@ -10,32 +10,60 @@
         h1, h2 { color: #007bff; }
         h1 { font-size: 1.8em; text-align: center; }
         h2 { border-bottom: 2px solid #007bff; padding-bottom: 8px; margin-top: 30px; font-size: 1.4em; }
-        textarea { width: 100%; height: 140px; margin-bottom: 10px; padding: 10px; box-sizing: border-box; border: 1px solid #ddd; border-radius: 6px; font-size: 1em; }
+        
+        textarea { width: 100%; height: 250px; margin-bottom: 10px; padding: 10px; box-sizing: border-box; border: 1px solid #ddd; border-radius: 6px; font-size: 1em; }
+        
         button { display: block; width: 100%; padding: 15px; cursor: pointer; background-color: #007bff; color: white; border: none; border-radius: 6px; font-size: 1.2em; font-weight: bold; margin-bottom: 15px; transition: background-color 0.3s; }
         #sortearBtn { background-color: #28a745; }
-        .jogador-item { padding: 10px; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; }
-        .jogador-info { display: flex; align-items: center; }
-        .jogador-item .level-label { font-weight: bold; margin-left: 10px; }
+        
+        .jogador-item { 
+            padding: 10px; 
+            border-bottom: 1px solid #eee; 
+            display: grid; 
+            grid-template-columns: 2fr 120px 130px 80px; 
+            align-items: center; 
+            gap: 15px; 
+        }
+        .jogador-nome { display: flex; align-items: center; gap: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .jogador-status { display: flex; justify-content: center; }
+        .jogador-nivel { display: flex; justify-content: center; }
+        .jogador-bonus { display: flex; align-items: center; gap: 5px; justify-content: flex-end; }
+        
+        @media (max-width: 600px) {
+            .jogador-item { grid-template-columns: 1fr 1fr; gap: 10px; }
+            .jogador-status, .jogador-nivel, .jogador-bonus { justify-content: flex-start; }
+            .jogador-bonus { grid-column: span 2; }
+        }
+
+        .nivel-select { padding: 4px; border-radius: 4px; font-weight: bold; border: 1px solid #ccc; background: #fff; cursor: pointer; outline: none; width: 100%; text-align: center; }
+        
         .time { margin-top: 20px; border: 1px solid #007bff; padding: 15px; border-radius: 8px; background-color: #f8f9fa; }
         .time h4 { margin-top: 0; color: #007bff; font-size: 1.2em; display: flex; justify-content: space-between; align-items: center; }
         .time ul { list-style-type: none; padding-left: 0; }
         .time li { margin-bottom: 5px; font-size: 1.1em; font-weight: 500; }
+        
         .nivel-4 { color: #dc3545; }
         .nivel-3 { color: #fd7e14; }
         .nivel-2 { color: #007bff; }
         .nivel-1 { color: #6c757d; }
+        
         .contadores { padding: 15px; background-color: #e9ecef; border-radius: 6px; margin-bottom: 20px; display: flex; justify-content: space-around; flex-wrap: wrap; text-align: center; }
         .contador-item strong { font-size: 1.5em; color: #007bff; }
         .status-forca { font-size: 0.8em; font-weight: bold; }
+        
+        .badge { font-size: 0.8em; padding: 4px 8px; border-radius: 12px; font-weight: bold; text-align: center; width: 100%; white-space: nowrap; }
+        .badge-confirmado { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .badge-ausente { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .badge-pendente { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Resenha Futs!! Sorteador V4.06.01</h1>
+        <h1>Sorteador Resenha Futs - V4.1.041 (2610)</h1>
         <h2>Passo 1: Lista de Jogadores</h2>
         <textarea id="textoWhatsapp" placeholder="Cole aqui a mensagem de confirmação do WhatsApp..."></textarea>
         <button onclick="processarLista()">Processar Lista</button>
-        <h2>Passo 2: Confirmação e Bônus</h2>
+        <h2>Passo 2: Presença na Quadra e Bônus</h2>
         <div id="jogadoresProcessados"><p>A lista de jogadores aparecerá aqui.</p></div>
         <div id="contadores" class="contadores" style="display: none;"></div>
         <button id="sortearBtn" onclick="iniciarSorteio()" style="display: none;">INICIAR SORTEIO</button>
@@ -44,72 +72,174 @@
     </div>
     
     <script>
-        const NIVEIS_DE_HABILIDADE = { 'Anderson': 4, 'Junior': 4, 'Kleber': 4, 'Elivelton': 3, 'Felipe': 3, 'Jajá': 3, 'Rodolfo': 3, 'Willians': 3, 'Claudinei': 2, 'Dudinha': 2, 'Jonathan': 3, 'Lucas': 2, 'Matheus C': 4, 'Matheus Rosq': 2, 'Vitor': 1, 'Elio': 1, 'Cabelinh': 1, 'Gilson': 1, 'Kauê': 1, 'Rafael': 1, };
+        const NIVEIS_DE_HABILIDADE = { 'Anderson': 4, 'Junior': 4, 'Kleber': 4, 'Matheus C': 4, 'Elivelton': 3, 'Felipe': 3, 'Jajá': 3, 'Rodolfo': 3, 'Willians': 3, 'Claudinei': 2, 'Dudinha': 1, 'Jonathan': 2, 'Lucas': 2, 'Matheus Rosq': 2, 'Vitor': 1, 'Elio': 1, 'Cabelinh': 1, 'Gilson': 1, 'Kauê': 1, 'Rafael': 1, };
+        
+        const LABELS_NIVEL = { 4: 'Zagueiro', 3: 'Atacantes', 2: 'Meio-campo', 1: 'Só-Resenha' };
 
-        // Funções de UI (processarLista, renderizarLista, etc.) permanecem as mesmas
-        function extrairConfirmados(texto) {
-            const confirmados = new Set();
-            //
-            // const regexLinha = /^\s*\d+\.\s*(.+)/gm;  - 20.05.2026 => Só aceitava lista com pontos na separação
-            const regexLinha = /^\s*\d+[-.]\s*(.+)/gm;
-            //
+        function extrairDaMensagem(texto) {
+            const jogadores = [];
+            // Regex melhorada para aceitar números seguidos de traço, ponto, parêntese ou apenas espaço
+            const regexLinha = /^\s*\d+\s*[-.)]*\s*(.+)/gm;
             let match;
+            const nomesVistos = new Set();
+
             while ((match = regexLinha.exec(texto)) !== null) {
-                if (match[1].includes('✅')) {
-                    const nomeLimpo = match[1].replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '').trim();
-                    if (nomeLimpo) confirmados.add(nomeLimpo);
+                const linha = match[1];
+                
+                let statusWpp = 'pendente';
+                if (linha.includes('✅')) statusWpp = 'confirmado';
+                else if (linha.includes('❌')) statusWpp = 'ausente';
+
+                const nomeLimpo = linha.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '').trim();
+
+                if (nomeLimpo && /[a-zA-ZÀ-ÿ]/.test(nomeLimpo) && !nomesVistos.has(nomeLimpo)) {
+                    nomesVistos.add(nomeLimpo);
+                    jogadores.push({ nome: nomeLimpo, statusWpp: statusWpp });
                 }
             }
-            return Array.from(confirmados);
+            return jogadores;
         }
+
         function processarLista() {
-            const nomes = extrairConfirmados(document.getElementById('textoWhatsapp').value);
-            if (nomes.length === 0) { alert("Nenhum jogador confirmado com ✅ encontrado."); return; }
-            const jogadores = nomes.map(nome => ({ nome: nome, nivel: NIVEIS_DE_HABILIDADE[nome] || 2 }));
+            const estadoAnterior = {};
+            document.querySelectorAll('.jogador-item').forEach(item => {
+                const nome = item.dataset.nome;
+                const nivel = parseInt(item.querySelector('.nivel-select').value);
+                const presente = item.querySelector('input[name^="presente"]').checked;
+                const pontual = item.querySelector('input[name^="pontual"]').checked;
+                estadoAnterior[nome] = { nivel, presente, pontual };
+            });
+
+            const extraidos = extrairDaMensagem(document.getElementById('textoWhatsapp').value);
+            if (extraidos.length === 0) { alert("Nenhum jogador válido encontrado na mensagem."); return; }
+
+            const jogadores = extraidos.map(ext => {
+                let presenteQuadra = false; 
+                let pontualQuadra = false;
+                let nivelAtual = NIVEIS_DE_HABILIDADE[ext.nome] || 2;
+
+                if (estadoAnterior[ext.nome]) {
+                    presenteQuadra = estadoAnterior[ext.nome].presente;
+                    pontualQuadra = estadoAnterior[ext.nome].pontual;
+                    nivelAtual = estadoAnterior[ext.nome].nivel;
+                }
+
+                return { 
+                    nome: ext.nome, 
+                    statusWpp: ext.statusWpp, 
+                    nivel: nivelAtual, 
+                    presente: presenteQuadra, 
+                    pontual: pontualQuadra 
+                };
+            });
+
             renderizarListaConfirmacao(jogadores);
         }
+
         function renderizarListaConfirmacao(jogadores) {
             const div = document.getElementById('jogadoresProcessados');
-            div.innerHTML = '<h3>Jogadores Confirmados</h3>';
+            div.innerHTML = ''; 
             jogadores.sort((a,b) => a.nome.localeCompare(b.nome));
+            
             jogadores.forEach(j => {
-                div.innerHTML += `<div class="jogador-item" data-nome="${j.nome}" data-nivel="${j.nivel}"><div class="jogador-info"><input type="checkbox" name="presente-${j.nome}" checked onchange="atualizarContadores()"><label for="presente-${j.nome}">${j.nome}</label><span class="level-label nivel-${j.nivel}">Nível ${j.nivel}</span></div><div class="pontualidade-group"><input type="checkbox" name="pontual-${j.nome}" onchange="validarBonus(this)"><label for="pontual-${j.nome}">Bônus</label></div></div>`;
+                const presenteCheck = j.presente ? 'checked' : '';
+                const pontualCheck = j.pontual ? 'checked' : '';
+                
+                // Cria um ID seguro sem espaços para não bugar o clique no celular
+                const idSeguro = j.nome.replace(/[^a-zA-Z0-9]/g, '');
+                
+                let badgeHTML = '';
+                if (j.statusWpp === 'confirmado') badgeHTML = `<span class="badge badge-confirmado">✅ Confirmado</span>`;
+                else if (j.statusWpp === 'ausente') badgeHTML = `<span class="badge badge-ausente">❌ Ausente</span>`;
+                else badgeHTML = `<span class="badge badge-pendente">⏳ Pendente</span>`;
+
+                const optionsNivel = [4, 3, 2, 1].map(n => `<option value="${n}" ${j.nivel === n ? 'selected' : ''}>${LABELS_NIVEL[n]}</option>`).join('');
+
+                div.innerHTML += `
+                <div class="jogador-item" data-nome="${j.nome}" data-nivel="${j.nivel}" data-status="${j.statusWpp}">
+                    <div class="jogador-nome">
+                        <input type="checkbox" id="presente-${idSeguro}" name="presente-${idSeguro}" ${presenteCheck} onchange="atualizarContadores()">
+                        <label for="presente-${idSeguro}"><strong>${j.nome}</strong></label>
+                    </div>
+                    <div class="jogador-status">
+                        ${badgeHTML}
+                    </div>
+                    <div class="jogador-nivel">
+                        <select class="nivel-select nivel-${j.nivel}" onchange="atualizarNivel(this)">
+                            ${optionsNivel}
+                        </select>
+                    </div>
+                    <div class="jogador-bonus">
+                        <input type="checkbox" id="pontual-${idSeguro}" name="pontual-${idSeguro}" ${pontualCheck} onchange="validarBonus(this)">
+                        <label for="pontual-${idSeguro}">Bônus</label>
+                    </div>
+                </div>`;
             });
+            
             document.getElementById('sortearBtn').style.display = 'block';
             document.getElementById('contadores').style.display = 'flex';
             atualizarContadores();
         }
+
+        function atualizarNivel(selectElement) {
+            const jogadorItem = selectElement.closest('.jogador-item');
+            const novoNivel = selectElement.value;
+            
+            jogadorItem.dataset.nivel = novoNivel;
+            selectElement.className = `nivel-select nivel-${novoNivel}`;
+            
+            const checkboxBonus = jogadorItem.querySelector('input[name^="pontual"]');
+            if (checkboxBonus.checked) {
+                validarBonus(checkboxBonus);
+            }
+        }
+
         function validarBonus(checkbox) {
-            atualizarContadores(); // Atualiza primeiro, depois valida
+            atualizarContadores(); 
             if (!checkbox.checked) return;
             const todosBonus = document.querySelectorAll('input[name^="pontual"]:checked');
             if (todosBonus.length > 8) { alert("ERRO: Máximo de 8 bônus atingido!"); checkbox.checked = false; atualizarContadores(); return; }
             const nivelDoJogador = checkbox.closest('.jogador-item').dataset.nivel;
             let countNivel = 0;
             todosBonus.forEach(cb => { if (cb.closest('.jogador-item').dataset.nivel === nivelDoJogador) { countNivel++; } });
-            if (countNivel > 2) { alert(`ERRO: O Nível ${nivelDoJogador} já tem 2 bônus!`); checkbox.checked = false; atualizarContadores(); return; }
+            if (countNivel > 2) { alert(`ERRO: O nível "${LABELS_NIVEL[nivelDoJogador]}" já tem 2 bônus!`); checkbox.checked = false; atualizarContadores(); return; }
         }
+
         function atualizarContadores() {
-            const presentes = document.querySelectorAll('input[name^="presente"]:checked').length;
+            const totalNaLista = document.querySelectorAll('.jogador-item').length;
+            const confirmadosWpp = document.querySelectorAll('.jogador-item[data-status="confirmado"]').length;
+            const presentesNaQuadra = document.querySelectorAll('input[name^="presente"]:checked').length;
             const comBonus = document.querySelectorAll('input[name^="pontual"]:checked').length;
+            
             let timesTexto = '0';
-            if (presentes >= 5) {
-                const timesCompletos = Math.floor(presentes / 5);
-                const resto = presentes % 5;
+            if (presentesNaQuadra >= 5) {
+                const timesCompletos = Math.floor(presentesNaQuadra / 5);
+                const resto = presentesNaQuadra % 5;
                 timesTexto = `${timesCompletos}`;
                 if (resto > 0) { timesTexto += ` (+${resto} próx.)`; }
             }
-            document.getElementById('contadores').innerHTML = `<div class="contador-item"><span>Confirmados</span><br><strong>${document.querySelectorAll('.jogador-item').length}</strong></div><div class="contador-item"><span>Presentes</span><br><strong>${presentes}</strong></div><div class="contador-item"><span>Times</span><br><strong>${timesTexto}</strong></div><div class="contador-item"><span>Bônus</span><br><strong>${comBonus}</strong></div>`;
+            
+            document.getElementById('contadores').innerHTML = `
+                <div class="contador-item"><span>Wpp (✅)</span><br><strong>${confirmadosWpp} / ${totalNaLista}</strong></div>
+                <div class="contador-item"><span>Presentes Quadra</span><br><strong>${presentesNaQuadra}</strong></div>
+                <div class="contador-item"><span>Times Fechados</span><br><strong>${timesTexto}</strong></div>
+                <div class="contador-item"><span>Bônus Ativos</span><br><strong>${comBonus}</strong></div>`;
         }
+
         function coletarDadosFinais() {
              const lista = [];
              document.querySelectorAll('.jogador-item').forEach(item => {
-                if (item.querySelector('input[name^="presente"]:checked')) {
-                    lista.push({ nome: item.dataset.nome, nivel: parseInt(item.dataset.nivel), pontual: item.querySelector('input[name^="pontual"]:checked') ? true : false, });
+                if (item.querySelector('input[name^="presente"]').checked) {
+                    lista.push({ 
+                        nome: item.dataset.nome, 
+                        nivel: parseInt(item.dataset.nivel), 
+                        pontual: item.querySelector('input[name^="pontual"]').checked 
+                    });
                 }
              });
              return lista;
         }
+
         function shuffleArray(array) {
             for (let i = array.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [array[i], array[j]] = [array[j], array[i]]; }
             return array;
@@ -118,9 +248,8 @@
         function iniciarSorteio() {
             const jogadoresPresentes = coletarDadosFinais();
             const N = jogadoresPresentes.length;
-            if (N < 5) { alert(`Mínimo de 5 jogadores necessários.`); return; }
+            if (N < 5) { alert(`Mínimo de 5 jogadores presentes na quadra necessários para o sorteio.`); return; }
             
-            // FASE 0: SORTEIO PRÉVIO
             const resto = N % 5;
             let jogadoresParaSorteio = [...jogadoresPresentes];
             let grupoDosProximos = [];
@@ -132,8 +261,8 @@
             }
             
             const numeroDeTimes = Math.floor(jogadoresParaSorteio.length / 5);
-            if (numeroDeTimes === 0) { // Caso especial: menos de 5 jogadores após retirar os próximos
-                 times = [{id: 1, jogadores: jogadoresParaSorteio}];
+            if (numeroDeTimes === 0) { 
+                 let times = [{id: 1, jogadores: jogadoresParaSorteio}];
                  if (grupoDosProximos.length > 0) times.push({ id: 2, jogadores: grupoDosProximos });
                  renderizarResultado(times, jogadoresPresentes);
                  return;
@@ -142,7 +271,6 @@
             let times = Array.from({ length: numeroDeTimes }, (_, i) => ({ id: i + 1, jogadores: [] }));
             const listaRepescagem = [];
             
-            // FASE 1: SORTEIO PRINCIPAL (MÉTODO DAS RODADAS)
             for (let nivel = 4; nivel >= 1; nivel--) {
                 const jogadoresDoNivel = jogadoresParaSorteio.filter(j => j.nivel === nivel);
                 const pontuais = shuffleArray(jogadoresDoNivel.filter(j => j.pontual));
@@ -158,7 +286,6 @@
                 });
             }
             
-            // FASE 2: REPESCAGEM
             shuffleArray(listaRepescagem);
             while (listaRepescagem.length > 0) {
                 times.sort((a, b) => a.jogadores.length - b.jogadores.length);
@@ -170,7 +297,6 @@
                 }
             }
             
-            // FASE 3: MONTAGEM FINAL
             if (grupoDosProximos.length > 0) {
                 times.push({ id: numeroDeTimes + 1, jogadores: grupoDosProximos });
             }
@@ -192,7 +318,7 @@
 
                 const jogadoresListaHTML = time.jogadores.map(j => {
                     const nomeFormatado = j.pontual ? `<strong>${j.nome}</strong>` : j.nome;
-                    return `<li class="nivel-${j.nivel}">${nomeFormatado}</li>`;
+                    return `<li class="nivel-${j.nivel}">${nomeFormatado} <small>(${LABELS_NIVEL[j.nivel]})</small></li>`;
                 }).join('');
                 
                 let statusForca = '';
@@ -205,7 +331,7 @@
                 const tituloTime = eTimeDosProximos ? `Time ${time.id} (Próximos / ${time.jogadores.length})` : `Time ${time.id} (Força Total: ${forca}) ${statusForca}`;
                 timesHTML += `<div class="time"><h4>${tituloTime}</h4><ul>${jogadoresListaHTML}</ul></div>`;
             });
-            const botaoHTML = `<br><button onclick="copiarParaWhatsapp(${JSON.stringify(times).replace(/"/g, '&quot;')})">Copiar para WhatsApp</button>`;
+            const botaoHTML = `<br><button id="btnCopiarWpp" onclick="copiarParaWhatsapp(${JSON.stringify(times).replace(/"/g, '&quot;')})">Copiar para WhatsApp</button>`;
             document.getElementById('resultadoSorteio').innerHTML = timesHTML + botaoHTML;
         }
         
@@ -220,11 +346,25 @@
                 time.jogadores.sort((a, b) => b.nivel - a.nivel);
                 time.jogadores.forEach(j => { 
                     const nomeFormatado = j.pontual ? `*${j.nome}*` : j.nome;
-                    texto += `- ${nomeFormatado}\n`;
+                    texto += `- ${nomeFormatado} (${LABELS_NIVEL[j.nivel]})\n`;
                 });
                 texto += '\n';
             });
-            navigator.clipboard.writeText(texto).then(() => alert('Resultado copiado!')).catch(err => alert('Erro ao copiar.'));
+            
+            navigator.clipboard.writeText(texto).then(() => {
+                const btn = document.getElementById('btnCopiarWpp');
+                const textoOriginal = btn.innerText;
+                const corOriginal = btn.style.backgroundColor;
+                
+                // Muda visual do botão ao invés de usar Alert
+                btn.innerText = 'Copiado! ✅';
+                btn.style.backgroundColor = '#28a745';
+                
+                setTimeout(() => {
+                    btn.innerText = textoOriginal;
+                    btn.style.backgroundColor = corOriginal;
+                }, 2000);
+            }).catch(err => alert('Erro ao copiar.'));
         }
     </script>
 </body>
