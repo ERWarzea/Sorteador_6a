@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Sorteador de Times (V4.1.041)</title>
+    <title>Sorteador de Times (V4.1.06)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 10px; background-color: #f0f2f5; color: #1c1e21; }
@@ -16,6 +16,7 @@
         button { display: block; width: 100%; padding: 15px; cursor: pointer; background-color: #007bff; color: white; border: none; border-radius: 6px; font-size: 1.2em; font-weight: bold; margin-bottom: 15px; transition: background-color 0.3s; }
         #sortearBtn { background-color: #28a745; }
         
+        /* Layout Desktop */
         .jogador-item { 
             padding: 10px; 
             border-bottom: 1px solid #eee; 
@@ -26,17 +27,27 @@
         }
         .jogador-nome { display: flex; align-items: center; gap: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .jogador-status { display: flex; justify-content: center; }
-        .jogador-nivel { display: flex; justify-content: center; }
+        .jogador-nivel { display: flex; justify-content: center; width: 100%; }
         .jogador-bonus { display: flex; align-items: center; gap: 5px; justify-content: flex-end; }
         
+        .nivel-select { padding: 6px 4px; border-radius: 4px; font-weight: bold; border: 1px solid #ccc; background: #fff; cursor: pointer; outline: none; width: 100%; text-align: center; }
+        
+        /* Novo Layout Mobile: Grid 2x2 Alinhado */
         @media (max-width: 600px) {
-            .jogador-item { grid-template-columns: 1fr 1fr; gap: 10px; }
-            .jogador-status, .jogador-nivel, .jogador-bonus { justify-content: flex-start; }
-            .jogador-bonus { grid-column: span 2; }
+            .jogador-item { 
+                grid-template-columns: 1fr auto; /* Duas colunas: esquerda flexível, direita fixa no conteúdo */
+                grid-template-rows: auto auto; /* Duas linhas */
+                gap: 10px 15px; 
+                padding: 15px 5px;
+            }
+            .jogador-nome { grid-column: 1; grid-row: 1; }
+            .jogador-status { grid-column: 2; grid-row: 1; justify-content: flex-end; }
+            .jogador-nivel { grid-column: 1; grid-row: 2; justify-content: flex-start; }
+            .jogador-bonus { grid-column: 2; grid-row: 2; justify-content: flex-end; }
+            
+            .nivel-select { max-width: 160px; text-align: left; padding-left: 8px; } /* Ajuste estético no select */
         }
 
-        .nivel-select { padding: 4px; border-radius: 4px; font-weight: bold; border: 1px solid #ccc; background: #fff; cursor: pointer; outline: none; width: 100%; text-align: center; }
-        
         .time { margin-top: 20px; border: 1px solid #007bff; padding: 15px; border-radius: 8px; background-color: #f8f9fa; }
         .time h4 { margin-top: 0; color: #007bff; font-size: 1.2em; display: flex; justify-content: space-between; align-items: center; }
         .time ul { list-style-type: none; padding-left: 0; }
@@ -47,11 +58,11 @@
         .nivel-2 { color: #007bff; }
         .nivel-1 { color: #6c757d; }
         
-        .contadores { padding: 15px; background-color: #e9ecef; border-radius: 6px; margin-bottom: 20px; display: flex; justify-content: space-around; flex-wrap: wrap; text-align: center; }
-        .contador-item strong { font-size: 1.5em; color: #007bff; }
+        .contadores { padding: 15px; background-color: #e9ecef; border-radius: 6px; margin-bottom: 20px; display: flex; justify-content: space-around; flex-wrap: wrap; text-align: center; gap: 10px; }
+        .contador-item strong { font-size: 1.4em; color: #007bff; }
         .status-forca { font-size: 0.8em; font-weight: bold; }
         
-        .badge { font-size: 0.8em; padding: 4px 8px; border-radius: 12px; font-weight: bold; text-align: center; width: 100%; white-space: nowrap; }
+        .badge { font-size: 0.8em; padding: 5px 8px; border-radius: 12px; font-weight: bold; text-align: center; width: 100%; max-width: 120px; white-space: nowrap; }
         .badge-confirmado { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
         .badge-ausente { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
         .badge-pendente { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
@@ -59,7 +70,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>Sorteador Resenha Futs - V4.1.041 (2610)</h1>
+        <h1>Sorteador V4.1.06 - Resenha Futs!!</h1>
         <h2>Passo 1: Lista de Jogadores</h2>
         <textarea id="textoWhatsapp" placeholder="Cole aqui a mensagem de confirmação do WhatsApp..."></textarea>
         <button onclick="processarLista()">Processar Lista</button>
@@ -72,13 +83,12 @@
     </div>
     
     <script>
-        const NIVEIS_DE_HABILIDADE = { 'Anderson': 4, 'Junior': 4, 'Kleber': 4, 'Matheus C': 4, 'Elivelton': 3, 'Felipe': 3, 'Jajá': 3, 'Rodolfo': 3, 'Willians': 3, 'Claudinei': 2, 'Dudinha': 1, 'Jonathan': 2, 'Lucas': 2, 'Matheus Rosq': 2, 'Vitor': 1, 'Elio': 1, 'Cabelinh': 1, 'Gilson': 1, 'Kauê': 1, 'Rafael': 1, };
+        const NIVEIS_DE_HABILIDADE = { 'Anderson': 4, 'Junior': 4, 'Kleber': 4, 'Elivelton': 3, 'Felipe': 3, 'Jajá': 3, 'Rodolfo': 3, 'Willians': 3, 'Claudinei': 2, 'Dudinha': 2, 'Jonathan': 2, 'Lucas': 2, 'Matheus C': 2, 'Matheus Rosq': 2, 'Vitor': 2, 'Elio': 1, 'Cabelinh': 1, 'Gilson': 1, 'Kauê': 1, 'Rafael': 1, };
         
         const LABELS_NIVEL = { 4: 'Zagueiro', 3: 'Atacantes', 2: 'Meio-campo', 1: 'Só-Resenha' };
 
         function extrairDaMensagem(texto) {
             const jogadores = [];
-            // Regex melhorada para aceitar números seguidos de traço, ponto, parêntese ou apenas espaço
             const regexLinha = /^\s*\d+\s*[-.)]*\s*(.+)/gm;
             let match;
             const nomesVistos = new Set();
@@ -145,7 +155,6 @@
                 const presenteCheck = j.presente ? 'checked' : '';
                 const pontualCheck = j.pontual ? 'checked' : '';
                 
-                // Cria um ID seguro sem espaços para não bugar o clique no celular
                 const idSeguro = j.nome.replace(/[^a-zA-Z0-9]/g, '');
                 
                 let badgeHTML = '';
@@ -158,7 +167,7 @@
                 div.innerHTML += `
                 <div class="jogador-item" data-nome="${j.nome}" data-nivel="${j.nivel}" data-status="${j.statusWpp}">
                     <div class="jogador-nome">
-                        <input type="checkbox" id="presente-${idSeguro}" name="presente-${idSeguro}" ${presenteCheck} onchange="atualizarContadores()">
+                        <input type="checkbox" id="presente-${idSeguro}" name="presente-${idSeguro}" ${presenteCheck} onchange="atualizarContadores()" style="transform: scale(1.2); margin-right: 5px;">
                         <label for="presente-${idSeguro}"><strong>${j.nome}</strong></label>
                     </div>
                     <div class="jogador-status">
@@ -170,7 +179,7 @@
                         </select>
                     </div>
                     <div class="jogador-bonus">
-                        <input type="checkbox" id="pontual-${idSeguro}" name="pontual-${idSeguro}" ${pontualCheck} onchange="validarBonus(this)">
+                        <input type="checkbox" id="pontual-${idSeguro}" name="pontual-${idSeguro}" ${pontualCheck} onchange="validarBonus(this)" style="transform: scale(1.2); margin-right: 5px;">
                         <label for="pontual-${idSeguro}">Bônus</label>
                     </div>
                 </div>`;
@@ -356,7 +365,6 @@
                 const textoOriginal = btn.innerText;
                 const corOriginal = btn.style.backgroundColor;
                 
-                // Muda visual do botão ao invés de usar Alert
                 btn.innerText = 'Copiado! ✅';
                 btn.style.backgroundColor = '#28a745';
                 
